@@ -4,7 +4,6 @@ resource "oci_identity_domains_app" "wif_app" {
   schemas       = ["urn:ietf:params:scim:schemas:oracle:idcs:App"]
 
   display_name    = "GitHub_WIF_App_TF"
-  name            = "GitHub_WIF_App_TF"
   active          = true
   client_type     = "confidential"
   is_oauth_client = true
@@ -31,7 +30,7 @@ resource "oci_identity_domains_identity_propagation_trust" "github_trust" {
   active              = true
   allow_impersonation = true
 
-  oauth_clients = [oci_identity_domains_app.wif_app.id]
+  oauth_clients = [oci_identity_domains_app.wif_app.name]
 
   # Map the GitHub Subject to the Service User
   impersonation_service_users {

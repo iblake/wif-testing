@@ -13,6 +13,10 @@ resource "oci_identity_domains_user" "wif_user" {
     family_name = "ServiceUser"
   }
   active = true
+
+  urnietfparamsscimschemasoracleidcsextensionuser_user {
+    service_user = true
+  }
 }
 
 resource "oci_identity_domains_group" "wif_group" {
