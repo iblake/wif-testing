@@ -6,7 +6,7 @@ resource "oci_identity_domains_app" "wif_app" {
   display_name    = "GitHub_WIF_App_TF"
   name            = "GitHub_WIF_App_TF"
   active          = true
-  client_type     = "confidential"
+  client_type     = "public"
   is_oauth_client = true
   allowed_grants  = ["client_credentials", "urn:ietf:params:oauth:grant-type:jwt-bearer"]
 
