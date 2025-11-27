@@ -45,7 +45,8 @@ jobs:
             --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
             --data-urlencode "requested_token_type=urn:oci:token-type:oci-upst" \
             --data-urlencode "subject_token=${GITHUB_TOKEN}" \
-            --data-urlencode "subject_token_type=jwt")
+            --data-urlencode "subject_token_type=urn:ietf:params:oauth:token-type:jwt" \
+            --data-urlencode "scope=urn:opc:idm:__myscopes__")
             
           # Token exchange returns 'token' field (UPST), not 'access_token'
           ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.token // .access_token')
