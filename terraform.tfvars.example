@@ -1,0 +1,12 @@
+tenancy_ocid     = "ocid1.tenancy.oc1..aaaaaaaaxxxxx"
+region           = "us-ashburn-1"
+idcs_endpoint    = "https://idcs-xxxxxxxxxxxx.identity.oraclecloud.com"
+
+github_org    = "my-org"
+github_repo   = "my-repo"
+github_branch = "main"
+
+# Optional: Override Service User/Group names
+# service_user_name  = "custom-wif-user"
+# service_user_email = "custom-wif-user@example.com"
+# service_group_name = "Custom-WIF-Group"
