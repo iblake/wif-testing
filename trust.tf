@@ -42,7 +42,7 @@ resource "oci_identity_domains_identity_propagation_trust" "github_trust" {
 }
 
 output "wif_app_client_id" {
-  value = oci_identity_domains_app.wif_app.id
+  value = oci_identity_domains_app.wif_app.name
 }
 
 # Client Secret is not exported by the resource for security.
