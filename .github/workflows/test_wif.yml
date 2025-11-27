@@ -36,24 +36,26 @@ jobs:
             exit 1
           fi
 
-          # 2. Exchange GitHub Token for OCI Token
+          # 2. Exchange GitHub Token for OCI Token (using Token Exchange grant)
           echo "Exchanging GitHub Token for OCI Token..."
           BASIC_AUTH=$(printf "%s:%s" "${WIF_APP_CLIENT_ID}" "${WIF_APP_CLIENT_SECRET}" | base64 | tr -d '\n')
           OCI_TOKEN_RESPONSE=$(curl -s -X POST "${IDCS_ENDPOINT}/oauth2/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -H "Authorization: Basic ${BASIC_AUTH}" \
-            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            --data-urlencode "assertion=${GITHUB_TOKEN}" \
-            --data-urlencode "scope=urn:opc:idm:__myscopes__")
+            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+            --data-urlencode "requested_token_type=urn:oci:token-type:oci-upst" \
+            --data-urlencode "subject_token=${GITHUB_TOKEN}" \
+            --data-urlencode "subject_token_type=jwt")
             
-          ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.access_token')
+          # Token exchange returns 'token' field (UPST), not 'access_token'
+          ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.token // .access_token')
 
           if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
             echo "Failed to get OCI Access Token"
             echo "Response: $OCI_TOKEN_RESPONSE"
             exit 1
           fi
-          echo "Successfully retrieved OCI Access Token"
+          echo "Successfully retrieved OCI Access Token (UPST)"
 
           # 3. Configure OCI CLI
           mkdir -p ~/.oci
