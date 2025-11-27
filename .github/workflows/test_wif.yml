@@ -38,13 +38,12 @@ jobs:
 
           # 2. Exchange GitHub Token for OCI Token
           echo "Exchanging GitHub Token for OCI Token..."
+          BASIC_AUTH=$(printf "%s:%s" "${WIF_APP_CLIENT_ID}" "${WIF_APP_CLIENT_SECRET}" | base64 | tr -d '\n')
           OCI_TOKEN_RESPONSE=$(curl -s -X POST "${IDCS_ENDPOINT}/oauth2/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            --data-urlencode "grant_type=client_credentials" \
-            --data-urlencode "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
-            --data-urlencode "client_assertion=${GITHUB_TOKEN}" \
-            --data-urlencode "client_id=${WIF_APP_CLIENT_ID}" \
-            --data-urlencode "client_secret=${WIF_APP_CLIENT_SECRET}" \
+            -H "Authorization: Basic ${BASIC_AUTH}" \
+            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+            --data-urlencode "assertion=${GITHUB_TOKEN}" \
             --data-urlencode "scope=urn:opc:idm:__myscopes__")
             
           ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.access_token')
