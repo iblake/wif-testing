@@ -28,7 +28,8 @@ jobs:
           # 1. Get GitHub OIDC Token
           echo "Fetching GitHub OIDC Token..."
           # Use the App Client ID as the audience
-          GITHUB_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${WIF_APP_CLIENT_ID}" \
+          # Ask GitHub for an OIDC token with audience matching the issuer expected by IDCS
+          GITHUB_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://token.actions.githubusercontent.com" \
             -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" | jq -r '.value')
 
           if [ -z "$GITHUB_TOKEN" ] || [ "$GITHUB_TOKEN" == "null" ]; then
@@ -42,8 +43,9 @@ jobs:
           OCI_TOKEN_RESPONSE=$(curl -s -X POST "${IDCS_ENDPOINT}/oauth2/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -H "Authorization: Basic ${BASIC_AUTH}" \
-            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            --data-urlencode "assertion=${GITHUB_TOKEN}" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
+            --data-urlencode "client_assertion=${GITHUB_TOKEN}" \
             --data-urlencode "scope=urn:opc:idm:__myscopes__")
             
           ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.access_token')
