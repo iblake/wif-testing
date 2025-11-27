@@ -36,16 +36,15 @@ jobs:
             exit 1
           fi
 
-          # 2. Exchange GitHub Token for OCI Token (using Token Exchange grant)
+          # 2. Exchange GitHub Token for OCI Token (using client_credentials with assertion)
           echo "Exchanging GitHub Token for OCI Token..."
           BASIC_AUTH=$(printf "%s:%s" "${WIF_APP_CLIENT_ID}" "${WIF_APP_CLIENT_SECRET}" | base64 | tr -d '\n')
           OCI_TOKEN_RESPONSE=$(curl -s -X POST "${IDCS_ENDPOINT}/oauth2/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -H "Authorization: Basic ${BASIC_AUTH}" \
-            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
-            --data-urlencode "requested_token_type=urn:oci:token-type:oci-upst" \
-            --data-urlencode "subject_token=${GITHUB_TOKEN}" \
-            --data-urlencode "subject_token_type=urn:ietf:params:oauth:token-type:jwt" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
+            --data-urlencode "client_assertion=${GITHUB_TOKEN}" \
             --data-urlencode "scope=urn:opc:idm:__myscopes__")
             
           # Token exchange returns 'token' field (UPST), not 'access_token'
