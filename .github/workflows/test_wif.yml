@@ -40,12 +40,12 @@ jobs:
           echo "Exchanging GitHub Token for OCI Token..."
           OCI_TOKEN_RESPONSE=$(curl -s -X POST "${IDCS_ENDPOINT}/oauth2/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=client_credentials" \
-            -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
-            -d "client_assertion=${GITHUB_TOKEN}" \
-            -d "client_id=${WIF_APP_CLIENT_ID}" \
-            -d "client_secret=${WIF_APP_CLIENT_SECRET}" \
-            -d "scope=urn:opc:idm:__myscopes__")
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
+            --data-urlencode "client_assertion=${GITHUB_TOKEN}" \
+            --data-urlencode "client_id=${WIF_APP_CLIENT_ID}" \
+            --data-urlencode "client_secret=${WIF_APP_CLIENT_SECRET}" \
+            --data-urlencode "scope=urn:opc:idm:__myscopes__")
             
           ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.access_token')
 
