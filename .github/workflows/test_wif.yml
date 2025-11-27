@@ -21,6 +21,7 @@ jobs:
         env:
           IDCS_ENDPOINT: ${{ secrets.IDCS_ENDPOINT }}
           WIF_APP_CLIENT_ID: ${{ secrets.WIF_APP_CLIENT_ID }}
+          WIF_APP_CLIENT_SECRET: ${{ secrets.WIF_APP_CLIENT_SECRET }}
           OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
         run: |
@@ -42,6 +43,8 @@ jobs:
             -d "grant_type=client_credentials" \
             -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
             -d "client_assertion=${GITHUB_TOKEN}" \
+            -d "client_id=${WIF_APP_CLIENT_ID}" \
+            -d "client_secret=${WIF_APP_CLIENT_SECRET}" \
             -d "scope=urn:opc:idm:__myscopes__")
             
           ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.access_token')
