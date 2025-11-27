@@ -65,6 +65,7 @@ To allow the GitHub Workflow to authenticate, you must store sensitive informati
 | :--- | :--- | :--- |
 | `IDCS_ENDPOINT` | Terraform Output | The full URL of your Identity Domain. Ensure no trailing slash. |
 | `WIF_APP_CLIENT_ID` | Terraform Output | The unique ID of the Confidential App created by Terraform. |
+| `WIF_APP_CLIENT_SECRET` | OCI Console | The Client Secret of the Confidential App. Required for Basic Auth. |
 | `OCI_TENANCY_OCID` | `terraform.tfvars` | Your Tenancy OCID (starts with `ocid1.tenancy...`). |
 | `OCI_REGION` | `terraform.tfvars` | The OCI Region identifier (e.g., `eu-frankfurt-1`). |
 
@@ -80,6 +81,7 @@ We use a manual script in the GitHub Action because the standard OCI action is d
 
 2. **Token Exchange**:
     The script sends a `POST` request to the IDCS `oauth2/v1/token` endpoint.
+    * **Authorization**: Basic Auth (`Client ID` + `Client Secret`).
     * **Grant Type**: `client_credentials`
     * **Client Assertion Type**: `jwt-bearer` (This tells IDCS we are using a token to authenticate)
     * **Client Assertion**: The GitHub OIDC Token.
