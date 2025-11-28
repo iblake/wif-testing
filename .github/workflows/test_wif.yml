@@ -17,26 +17,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.3
+        with:
+          node-version: '20'
+
       - name: Install OCI CLI
         run: |
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
-          echo "$HOME/bin" >> $GITHUB_PATH
+          echo "$HOME/bin" >> $GITHUB_PATH # Add OCI CLI to PATH
         shell: bash
 
-      - name: Authenticate to OCI using Token Exchange
+      - name: Run OCI Token Exchange Action
         uses: gtrevorrow/oci-token-exchange-action@v1
         with:
-          oidc_client_identifier: ${{ secrets.WIF_APP_CLIENT_ID }}:${{ secrets.WIF_APP_CLIENT_SECRET }}
-          domain_base_url: ${{ secrets.IDCS_ENDPOINT }}
-          oci_tenancy: ${{ secrets.OCI_TENANCY_OCID }}
-          oci_region: ${{ secrets.OCI_REGION }}
-          retry_count: '3'
+          oidc_client_identifier: ${{ secrets.WIF_APP_CLIENT_ID }}:${{ secrets.WIF_APP_CLIENT_SECRET }} # Secret for OAuth Client ID:Secret
+          domain_base_url: ${{ secrets.IDCS_ENDPOINT }} # Identity Domain URL
+          oci_tenancy: ${{ secrets.OCI_TENANCY_OCID }} # Tenancy OCID
+          oci_region: ${{ secrets.OCI_REGION }} # OCI Region
+          oci_profile: 'DEFAULT' # Creates/updates profile 'DEFAULT'
 
       - name: Verify OCI Access
         shell: bash
+        # Using --profile to target the specific account configuration
         run: |
-          # Test OCI CLI with the configured session token
-          echo "Testing OCI CLI authentication..."
           oci --auth security_token --profile DEFAULT os ns get
-
-          echo "OCI authentication successful!"
