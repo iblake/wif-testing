@@ -17,76 +17,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to OCI (Identity Domains WIF)
-        env:
-          IDCS_ENDPOINT: ${{ secrets.IDCS_ENDPOINT }}
-          WIF_APP_CLIENT_ID: ${{ secrets.WIF_APP_CLIENT_ID }}
-          WIF_APP_CLIENT_SECRET: ${{ secrets.WIF_APP_CLIENT_SECRET }}
-          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
-          OCI_REGION: ${{ secrets.OCI_REGION }}
+      - name: Install OCI CLI
         run: |
-          # 1. Get GitHub OIDC Token
-          echo "Fetching GitHub OIDC Token..."
-          # Request token with audience matching the trust issuer
-          GITHUB_TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://token.actions.githubusercontent.com" \
-            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" | jq -r '.value')
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+          echo "$HOME/bin" >> $GITHUB_PATH
+        shell: bash
 
-          if [ -z "$GITHUB_TOKEN" ] || [ "$GITHUB_TOKEN" == "null" ]; then
-            echo "Failed to get GitHub OIDC Token"
-            exit 1
-          fi
+      - name: Authenticate to OCI using Token Exchange
+        uses: gtrevorrow/oci-token-exchange-action@v1
+        with:
+          oidc_client_identifier: ${{ secrets.WIF_APP_CLIENT_ID }}:${{ secrets.WIF_APP_CLIENT_SECRET }}
+          domain_base_url: ${{ secrets.IDCS_ENDPOINT }}
+          oci_tenancy: ${{ secrets.OCI_TENANCY_OCID }}
+          oci_region: ${{ secrets.OCI_REGION }}
+          retry_count: '3'
 
-          # 2. Exchange GitHub Token for OCI Token (using jwt-bearer grant)
-          echo "Exchanging GitHub Token for OCI Token..."
-          BASIC_AUTH=$(printf "%s:%s" "${WIF_APP_CLIENT_ID}" "${WIF_APP_CLIENT_SECRET}" | base64 | tr -d '\n')
-          OCI_TOKEN_RESPONSE=$(curl -s -X POST "${IDCS_ENDPOINT}/oauth2/v1/token" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -H "Authorization: Basic ${BASIC_AUTH}" \
-            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-            --data-urlencode "assertion=${GITHUB_TOKEN}" \
-            --data-urlencode "scope=urn:opc:idm:__myscopes__")
-
-          # JWT bearer grant returns 'access_token'
-          ACCESS_TOKEN=$(echo "$OCI_TOKEN_RESPONSE" | jq -r '.access_token')
-
-          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-            echo "Failed to get OCI Access Token"
-            echo "Response: $OCI_TOKEN_RESPONSE"
-            exit 1
-          fi
-          echo "Successfully retrieved OCI Access Token (UPST)"
-
-          # 3. Configure OCI CLI
-          mkdir -p ~/.oci
-
-          # Generate a dummy key to satisfy CLI file existence checks (even if not used for signing)
-          openssl genrsa -out ~/.oci/oci_api_key.pem 2048
-          chmod 600 ~/.oci/oci_api_key.pem
-
-          # Save the token
-          echo "$ACCESS_TOKEN" > ~/.oci/oci_security_token
-          chmod 600 ~/.oci/oci_security_token
-
-          # Create config file
-          cat <<EOF > ~/.oci/config
-          [DEFAULT]
-          security_token_file=/home/runner/.oci/oci_security_token
-          key_file=/home/runner/.oci/oci_api_key.pem
-          tenancy=${OCI_TENANCY_OCID}
-          region=${OCI_REGION}
-          authentication_type=security_token_file
-          EOF
-
-      - name: Verify Access (IDCS UserInfo)
+      - name: Verify OCI Access
+        shell: bash
         run: |
-          # Verify the token works against IDCS
-          curl -s -H "Authorization: Bearer $(cat ~/.oci/oci_security_token)" \
-            "${{ secrets.IDCS_ENDPOINT }}/oauth2/v1/userinfo" | jq .
+          # Test OCI CLI with the configured session token
+          echo "Testing OCI CLI authentication..."
+          oci --auth security_token --profile DEFAULT os ns get
 
-      - name: Verify Access (OCI CLI)
-        env:
-          OCI_CLI_AUTH: security_token
-          OCI_CLI_PROFILE: DEFAULT
-        run: |
-          # Try to list namespace (might require signature, but let's test)
-          oci os ns get || echo "OCI CLI failed, but IDCS Auth worked."
+          echo "OCI authentication successful!"

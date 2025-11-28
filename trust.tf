@@ -7,7 +7,7 @@ resource "oci_identity_domains_app" "wif_app" {
   active          = true
   client_type     = "confidential"
   is_oauth_client = true
-  allowed_grants  = ["client_credentials", "urn:ietf:params:oauth:grant-type:jwt-bearer"]
+  allowed_grants  = ["client_credentials"]
 
   based_on_template {
     # Use the well-known template ID for a custom web app; keep value for compatibility.
